@@ -5,6 +5,8 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from random import randint
+
 
 from config import hidden_layers_size
 
@@ -12,6 +14,8 @@ input_layer_size = 30
 output_layer_size = 1
 
 size_of_population = 20
+
+mutation_factor = 10
 
 def trainNN(nn_structure):
     data_set = load_breast_cancer()
@@ -35,7 +39,7 @@ def generate_basic_structure_with_zeroes():
     for i in range(0, len(all_layers_size) - 1):
         NN.append(np.zeros((all_layers_size[i], all_layers_size[i + 1])))
 
-    print("Successfully generated basic NN topology")
+    # print("Successfully generated basic NN topology")
     return NN
 
 def get_zeroes_biases_vectors():
@@ -44,15 +48,14 @@ def get_zeroes_biases_vectors():
     for i in range(0, len(all_layers_size) - 1):
         biases.append(np.zeros(all_layers_size[i + 1]))
 
-    print("Successfully generated basic biases vector")
+    # print("Successfully generated basic biases vector")
     return biases
 
 def run_genetic_algo():
     population = [generate_basic_structure_with_zeroes() for _ in range(0, size_of_population)]
-    for _ in range(1, 2):
+    for _ in range(1, 8):
         # population = crossover(mutate(get_the_best_half(population)))
-        population = get_the_best_half(population)
-        print(population)
+        population = mutate(get_the_best_half(population))
         # print(population)
     return get_the_best_one(population)
 
@@ -61,11 +64,16 @@ def get_the_best_half(population):
     for i in range(0, len(population)):
         topology_fitness_map[i] = trainNN(population[i])
     best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/2)]
+    print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
-def mutate(population):
-    result = []
-    return result
+def mutate(populations):
+    for population in populations:
+        for _ in range(mutation_factor):
+            layer = randint(0, len(population)-1)
+            weigh = randint(0, len(population[layer])-1)
+            population[layer][weigh] = np.random.random(1)[0]/10
+    return populations
 
 def crossover(population):
     result = []
