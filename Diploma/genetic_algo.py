@@ -52,6 +52,7 @@ def run_genetic_algo():
     for _ in range(1, 2):
         # population = crossover(mutate(get_the_best_half(population)))
         population = get_the_best_half(population)
+        print(population)
         # print(population)
     return get_the_best_one(population)
 
@@ -60,7 +61,7 @@ def get_the_best_half(population):
     for i in range(0, len(population)):
         topology_fitness_map[i] = trainNN(population[i])
     best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/2)]
-    return list(map(lambda topology: topology[1], best_topologies))
+    return list(map(lambda topology: population[topology[0]], best_topologies))
 
 def mutate(population):
     result = []
