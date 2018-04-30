@@ -53,18 +53,21 @@ def get_zeroes_biases_vectors():
 
 def run_genetic_algo():
     population = [generate_basic_structure_with_zeroes() for _ in range(0, size_of_population)]
-    for _ in range(1, 8):
+    for _ in range(1, 20):
         # population = crossover(mutate(get_the_best_half(population)))
-        population = mutate(get_the_best_half(population))
+        half = get_the_best_half(population)
+        print("Current best result:  " + str(trainNN(half[0])))
+        population = crossover(mutate(half))
+
         # print(population)
-    return get_the_best_one(population)
+    return get_the_best_one(get_the_best_half(population))
 
 def get_the_best_half(population):
     topology_fitness_map = {}
     for i in range(0, len(population)):
         topology_fitness_map[i] = trainNN(population[i])
-    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/2)]
-    print(list(map(lambda topology: topology[1], best_topologies)))
+    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:3 * int(len(topology_fitness_map)/4)]
+    # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
 def mutate(populations):
@@ -77,10 +80,19 @@ def mutate(populations):
 
 def crossover(population):
     result = []
+    for _ in range(size_of_population):
+        tempNN1 = population[np.random.randint(0, len(population))]
+        tempNN2 = population[np.random.randint(0, len(population))]
+        tmpNNs = [tempNN1, tempNN2]
+        tempResult = []
+        for i in range(len(tempNN1)):
+            tempResult.append(tmpNNs[np.random.randint(0, 2)][i])
+        result.append(tempResult)
     return result
 
 def get_the_best_one(population):
     return population[0]
 
-run_genetic_algo()
+best_one = run_genetic_algo()
+print("Final result: " + str(trainNN(best_one)))
 
