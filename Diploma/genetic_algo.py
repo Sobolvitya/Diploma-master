@@ -16,7 +16,7 @@ from config import hidden_layers_size
 
 input_layer_size = 30
 output_layer_size = 1
-
+max_iterations = 20
 size_of_population = 12
 
 mutation_factor = 10
@@ -48,18 +48,22 @@ def generate_basic_structure_with_random_values():
 
 def run_genetic_algo():
     population = [generate_basic_structure_with_random_values() for _ in range(0, size_of_population)]
-    for _ in range(1, 20):
+    max_accuracy = 0
+    for _ in range(max_iterations):
         half = get_the_best_half(population)
         # print("The best topology")
         # print(half[0])
         the_best_result = trainNNWithStructure(half[0])
+        if (the_best_result > max_accuracy) :
+            max_accuracy = the_best_result
         print("Current best result:  " + str(the_best_result))
         if (the_best_result > acceptable_value) :
             print("This should be enough. \n NN structure is: ")
             print(half[0])
             break
         population = crossover(mutate(half, the_best_result))
-    return get_the_best_one(get_the_best_half(population))
+    last = trainNNWithStructure(get_the_best_one(get_the_best_half(population)))
+    return max(last, max_accuracy)
 
 def get_the_best_half(population):
     topology_fitness_map = {}
@@ -94,5 +98,5 @@ def get_the_best_one(population):
     return population[0]
 
 best_one = run_genetic_algo()
-print("Final result: " + str(trainNNWithStructure(best_one)))
+print("Final result: " + str(best_one))
 
