@@ -82,7 +82,7 @@ def mutate(populations, mutation_coef = None):
             population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2))) * ((-1) ** randint(1, 2))
     return populations
 
-def crossover(population):
+def crossover(population): #should be improved
     result = []
     for _ in range(size_of_population):
         tempNN1 = population[np.random.randint(0, len(population))]
@@ -90,7 +90,10 @@ def crossover(population):
         tmpNNs = [tempNN1, tempNN2]
         tempResult = []
         for i in range(len(tempNN1)):
-            tempResult.append(tmpNNs[np.random.randint(0, 2)][i])
+            tmpLayer = []
+            for j in range(len(tempNN2[i])):
+                tmpLayer.append(tmpNNs[np.random.randint(0, 2)][i][j])
+            tempResult.append(np.array(tmpLayer))
         result.append(tempResult)
     return result
 
