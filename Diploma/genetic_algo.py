@@ -24,7 +24,7 @@ selection_param = 2
 mutation_factor = 10
 acceptable_value = 0.9
 
-def trainNNWithStructure(mlp, nn_structure, X_test, y_test):
+def run_test_set_on_NN_with_structure(mlp, nn_structure, X_test, y_test):
     mlp.coefs_ = nn_structure
     predictions = mlp.predict(X_test)
     return accuracy_score(y_test, predictions)
@@ -44,7 +44,6 @@ def generate_NN():
     mlp.intercepts_ = get_zeroes_biases_vectors(input_layer_size, hidden_layers_size, output_layer_size)
     return X_test, mlp, y_test
 
-
 def generate_basic_structure_with_random_values():
     NN = []
     all_layers_size = (input_layer_size,) + hidden_layers_size + (output_layer_size,)
@@ -58,9 +57,7 @@ def run_genetic_algo():
     max_accuracy = 0
     for _ in range(max_iterations):
         half = selection(mlp, population, X_test, y_test)
-        # print("The best topology")
-        # print(half[0])
-        the_best_result = trainNNWithStructure(mlp, half[0], X_test, y_test)
+        the_best_result = run_test_set_on_NN_with_structure(mlp, half[0], X_test, y_test)
         if (the_best_result > max_accuracy) :
             max_accuracy = the_best_result
         print("Current best result:  " + str(the_best_result))
@@ -69,15 +66,14 @@ def run_genetic_algo():
             print(half[0])
             break
         population = crossover(mutate(half, the_best_result))
-    last = trainNNWithStructure(mlp, get_the_best_one(selection(mlp, population, X_test, y_test)), X_test, y_test)
+    last = run_test_set_on_NN_with_structure(mlp, get_the_best_one(selection(mlp, population, X_test, y_test)), X_test, y_test)
     return max(last, max_accuracy)
 
 def selection(mlp, population, X_test, y_test):
     topology_fitness_map = {}
     for i in range(0, len(population)):
-        topology_fitness_map[i] = trainNNWithStructure(mlp, population[i], X_test, y_test)
+        topology_fitness_map[i] = run_test_set_on_NN_with_structure(mlp, population[i], X_test, y_test)
     best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map) / selection_param)]
-    # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
 def mutate(populations, mutation_coef = None):
@@ -89,7 +85,7 @@ def mutate(populations, mutation_coef = None):
             population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2))) * ((-1) ** randint(1, 2))
     return populations
 
-def crossover(population): #should be improved
+def crossover(population):
     result = []
     for _ in range(size_of_population):
         tempNN1 = population[np.random.randint(0, len(population))]
