@@ -1,13 +1,17 @@
 import numpy as np
 import operator
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import load_breast_cancer, load_digits
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from random import randint
 
+from utils import get_zeroes_biases_vectors
 
+'''
+This code tries to generate weight for NN and beat the back propagation algo
+'''
 from config import hidden_layers_size
 
 input_layer_size = 30
@@ -29,7 +33,7 @@ def trainNN(nn_structure):
     mlp = MLPClassifier(hidden_layer_sizes=hidden_layers_size)
     mlp.fit(X_train, y_train)
     mlp.coefs_ = nn_structure
-    mlp.intercepts_ = get_zeroes_biases_vectors()
+    mlp.intercepts_ = get_zeroes_biases_vectors(input_layer_size, hidden_layers_size, output_layer_size)
     predictions = mlp.predict(X_test)
     return accuracy_score(y_test, predictions)
 
@@ -37,36 +41,27 @@ def generate_basic_structure_with_zeroes():
     NN = []
     all_layers_size = (input_layer_size,) + hidden_layers_size + (output_layer_size,)
     for i in range(0, len(all_layers_size) - 1):
-        NN.append(np.zeros((all_layers_size[i], all_layers_size[i + 1])))
+        NN.append(np.random.random((all_layers_size[i], all_layers_size[i + 1])))
 
     # print("Successfully generated basic NN topology")
     return NN
-
-def get_zeroes_biases_vectors():
-    biases = []
-    all_layers_size = (input_layer_size,) + hidden_layers_size + (output_layer_size,)
-    for i in range(0, len(all_layers_size) - 1):
-        biases.append(np.zeros(all_layers_size[i + 1]))
-
-    # print("Successfully generated basic biases vector")
-    return biases
 
 def run_genetic_algo():
     population = [generate_basic_structure_with_zeroes() for _ in range(0, size_of_population)]
     for _ in range(1, 20):
         # population = crossover(mutate(get_the_best_half(population)))
         half = get_the_best_half(population)
+        print("The best topology")
+        print(half[0])
         print("Current best result:  " + str(trainNN(half[0])))
         population = crossover(mutate(half))
-
-        # print(population)
     return get_the_best_one(get_the_best_half(population))
 
 def get_the_best_half(population):
     topology_fitness_map = {}
     for i in range(0, len(population)):
         topology_fitness_map[i] = trainNN(population[i])
-    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:3 * int(len(topology_fitness_map)/4)]
+    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/4)]
     # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
@@ -75,7 +70,7 @@ def mutate(populations):
         for _ in range(mutation_factor):
             layer = randint(0, len(population)-1)
             weigh = randint(0, len(population[layer])-1)
-            population[layer][weigh] = np.random.random(1)[0]/10
+            population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2)) ) * (-1 ** randint(0, 2))
     return populations
 
 def crossover(population):
