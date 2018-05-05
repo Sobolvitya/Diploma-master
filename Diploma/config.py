@@ -1,1 +1,1 @@
-hidden_layers_size = (3, 2)
+hidden_layers_size = (5, 4, 3)

@@ -1,6 +1,6 @@
 import numpy as np
 import operator
-from sklearn.datasets import load_breast_cancer, load_digits
+from sklearn.datasets import load_breast_cancer
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
@@ -20,8 +20,10 @@ output_layer_size = 1
 size_of_population = 12
 
 mutation_factor = 10
+acceptable_value = 0.9
 
-def trainNN(nn_structure):
+
+def trainNNWithStructure(nn_structure):
     data_set = load_breast_cancer()
     X = data_set['data']
     y = data_set['target']
@@ -37,25 +39,22 @@ def trainNN(nn_structure):
     predictions = mlp.predict(X_test)
     return accuracy_score(y_test, predictions)
 
-def generate_basic_structure_with_zeroes():
+def generate_basic_structure_with_random_values():
     NN = []
     all_layers_size = (input_layer_size,) + hidden_layers_size + (output_layer_size,)
     for i in range(0, len(all_layers_size) - 1):
         NN.append(np.random.random((all_layers_size[i], all_layers_size[i + 1])))
-
-    # print("Successfully generated basic NN topology")
     return NN
 
 def run_genetic_algo():
-    population = [generate_basic_structure_with_zeroes() for _ in range(0, size_of_population)]
+    population = [generate_basic_structure_with_random_values() for _ in range(0, size_of_population)]
     for _ in range(1, 20):
-        # population = crossover(mutate(get_the_best_half(population)))
         half = get_the_best_half(population)
         # print("The best topology")
         # print(half[0])
-        the_best_result = trainNN(half[0])
+        the_best_result = trainNNWithStructure(half[0])
         print("Current best result:  " + str(the_best_result))
-        if (the_best_result > 0.9) :
+        if (the_best_result > acceptable_value) :
             print("This should be enough. \n NN structure is: ")
             print(half[0])
             break
@@ -65,7 +64,7 @@ def run_genetic_algo():
 def get_the_best_half(population):
     topology_fitness_map = {}
     for i in range(0, len(population)):
-        topology_fitness_map[i] = trainNN(population[i])
+        topology_fitness_map[i] = trainNNWithStructure(population[i])
     best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/4)]
     # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
@@ -76,7 +75,7 @@ def mutate(populations, mutation_coef = None):
         for _ in range(adjusted_mutation_factor):
             layer = randint(0, len(population)-1)
             weigh = randint(0, len(population[layer])-1)
-            population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2)) ) * ((-1) ** randint(1, 2))
+            population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2))) * ((-1) ** randint(1, 2))
     return populations
 
 def crossover(population):
@@ -95,5 +94,5 @@ def get_the_best_one(population):
     return population[0]
 
 best_one = run_genetic_algo()
-print("Final result: " + str(trainNN(best_one)))
+print("Final result: " + str(trainNNWithStructure(best_one)))
 
