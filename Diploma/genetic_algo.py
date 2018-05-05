@@ -9,16 +9,18 @@ from random import randint
 
 from utils import get_zeroes_biases_vectors
 
+from config import hidden_layers_size
+
 '''
 This code tries to generate weight for NN and beat the back propagation algo
 '''
-from config import hidden_layers_size
+
 
 input_layer_size = 30
 output_layer_size = 1
 max_iterations = 20
 size_of_population = 12
-
+selection_param = 2
 mutation_factor = 10
 acceptable_value = 0.9
 
@@ -55,7 +57,7 @@ def run_genetic_algo():
     population = [generate_basic_structure_with_random_values() for _ in range(0, size_of_population)]
     max_accuracy = 0
     for _ in range(max_iterations):
-        half = get_the_best_half(mlp, population, X_test, y_test)
+        half = selection(mlp, population, X_test, y_test)
         # print("The best topology")
         # print(half[0])
         the_best_result = trainNNWithStructure(mlp, half[0], X_test, y_test)
@@ -67,14 +69,14 @@ def run_genetic_algo():
             print(half[0])
             break
         population = crossover(mutate(half, the_best_result))
-    last = trainNNWithStructure(mlp, get_the_best_one(get_the_best_half(mlp, population, X_test, y_test)), X_test, y_test)
+    last = trainNNWithStructure(mlp, get_the_best_one(selection(mlp, population, X_test, y_test)), X_test, y_test)
     return max(last, max_accuracy)
 
-def get_the_best_half(mlp, population, X_test, y_test):
+def selection(mlp, population, X_test, y_test):
     topology_fitness_map = {}
     for i in range(0, len(population)):
         topology_fitness_map[i] = trainNNWithStructure(mlp, population[i], X_test, y_test)
-    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/4)]
+    best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map) / selection_param)]
     # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
