@@ -22,8 +22,13 @@ size_of_population = 12
 mutation_factor = 10
 acceptable_value = 0.9
 
+def trainNNWithStructure(mlp, nn_structure, X_test, y_test):
+    mlp.coefs_ = nn_structure
+    predictions = mlp.predict(X_test)
+    return accuracy_score(y_test, predictions)
 
-def trainNNWithStructure(nn_structure):
+
+def generate_NN():
     data_set = load_breast_cancer()
     X = data_set['data']
     y = data_set['target']
@@ -34,10 +39,9 @@ def trainNNWithStructure(nn_structure):
     X_test = scaler.transform(X_test)
     mlp = MLPClassifier(hidden_layer_sizes=hidden_layers_size)
     mlp.fit(X_train, y_train)
-    mlp.coefs_ = nn_structure
     mlp.intercepts_ = get_zeroes_biases_vectors(input_layer_size, hidden_layers_size, output_layer_size)
-    predictions = mlp.predict(X_test)
-    return accuracy_score(y_test, predictions)
+    return X_test, mlp, y_test
+
 
 def generate_basic_structure_with_random_values():
     NN = []
@@ -47,13 +51,14 @@ def generate_basic_structure_with_random_values():
     return NN
 
 def run_genetic_algo():
+    X_test, mlp, y_test = generate_NN()
     population = [generate_basic_structure_with_random_values() for _ in range(0, size_of_population)]
     max_accuracy = 0
     for _ in range(max_iterations):
-        half = get_the_best_half(population)
+        half = get_the_best_half(mlp, population, X_test, y_test)
         # print("The best topology")
         # print(half[0])
-        the_best_result = trainNNWithStructure(half[0])
+        the_best_result = trainNNWithStructure(mlp, half[0], X_test, y_test)
         if (the_best_result > max_accuracy) :
             max_accuracy = the_best_result
         print("Current best result:  " + str(the_best_result))
@@ -62,13 +67,13 @@ def run_genetic_algo():
             print(half[0])
             break
         population = crossover(mutate(half, the_best_result))
-    last = trainNNWithStructure(get_the_best_one(get_the_best_half(population)))
+    last = trainNNWithStructure(mlp, get_the_best_one(get_the_best_half(mlp, population, X_test, y_test)), X_test, y_test)
     return max(last, max_accuracy)
 
-def get_the_best_half(population):
+def get_the_best_half(mlp, population, X_test, y_test):
     topology_fitness_map = {}
     for i in range(0, len(population)):
-        topology_fitness_map[i] = trainNNWithStructure(population[i])
+        topology_fitness_map[i] = trainNNWithStructure(mlp, population[i], X_test, y_test)
     best_topologies = sorted(topology_fitness_map.items(), key=operator.itemgetter(1), reverse=True)[:int(len(topology_fitness_map)/4)]
     # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
