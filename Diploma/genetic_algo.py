@@ -17,7 +17,7 @@ from config import hidden_layers_size
 input_layer_size = 30
 output_layer_size = 1
 
-size_of_population = 20
+size_of_population = 12
 
 mutation_factor = 10
 
@@ -51,10 +51,15 @@ def run_genetic_algo():
     for _ in range(1, 20):
         # population = crossover(mutate(get_the_best_half(population)))
         half = get_the_best_half(population)
-        print("The best topology")
-        print(half[0])
-        print("Current best result:  " + str(trainNN(half[0])))
-        population = crossover(mutate(half))
+        # print("The best topology")
+        # print(half[0])
+        the_best_result = trainNN(half[0])
+        print("Current best result:  " + str(the_best_result))
+        if (the_best_result > 0.9) :
+            print("This should be enough. \n NN structure is: ")
+            print(half[0])
+            break
+        population = crossover(mutate(half, the_best_result))
     return get_the_best_one(get_the_best_half(population))
 
 def get_the_best_half(population):
@@ -65,12 +70,13 @@ def get_the_best_half(population):
     # print(list(map(lambda topology: topology[1], best_topologies)))
     return list(map(lambda topology: population[topology[0]], best_topologies))
 
-def mutate(populations):
+def mutate(populations, mutation_coef = None):
+    adjusted_mutation_factor = int (mutation_factor / mutation_coef)
     for population in populations:
-        for _ in range(mutation_factor):
+        for _ in range(adjusted_mutation_factor):
             layer = randint(0, len(population)-1)
             weigh = randint(0, len(population[layer])-1)
-            population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2)) ) * (-1 ** randint(0, 2))
+            population[layer][weigh] = (np.random.random(1)[0]/(10 ** np.random.randint(0, 2)) ) * ((-1) ** randint(1, 2))
     return populations
 
 def crossover(population):
